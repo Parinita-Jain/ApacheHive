@@ -1,0 +1,1063 @@
+HIve--
+Its a data warehouse built on top of hadoop.
+Where warehouse in short is acentral store of info for later analysis. It storeinfointhe standardformat
+which makes it very easy to query and extractuseful info.
+This allows analysis of big data in hadoop.
+It works with Hive Query Lang but its actually an abstraction to map-reduce tasks.
+Because any hive quey that we write is convertedinto 1 or more map reduce task.Andsince hadoop stores datain a file structure format,
+hive actually provides a way to view that data in atabular format,much like in RDBMS.
+
+Now,Hive i nota relationaldatabase.It cannot track realtime processing because ofthe higher latency time compared to RDBMS.
+This is because of the batch nature of map-reduce which makesit a poor candidate when it comes towriting simple queries equirirng low latency.
+tf,it is best suited for  processing on huge dataset.
+companes wouse it--airbnb,guardian,vanguard
+
+Features of Hive--- 
+It is a data warehouse,it is schema on read,simplifies queryin,multiple processing engines.
+
+We can have diff kinds of datalike clickstreamdata,users data,products data.U can have diff dbs tostore this datand all of these areofdiff format as well.
+and u have certain querieslike total products per category?,most active user base?,number of signed-up users?Then it is probably better to answer such queries
+beforehand with a common formatting and store them in a commonplace.That common placeisknown as a datawarehouse.
+It is similar to  Rdbms but it support faster querying on bulk data.
+
+Schema on read--
+letsay we have cols id, ip addr,order_id.And at the time when info came,it missed ip addr.
+So,what hive will dois it will store the data in table and wile reading,it will through error.
+
+Simplifies querying--
+it has sql like querying,which is HQL.This is internally converted into map-reduce.
+
+It supports multiple processing engines like-map-reduce,tez and spark.
+
+Working of HIve--
+it major has 2 components.1 is the hive core component and otheer  is components of hadoop on which hive runs.
+
+Hive corecomponents--
+1st we have client and user interface through which we connect to hive.
+Client like thrift,jdbc,odbc through which any application can access hive.
+User interface for querying hive- WebUI,Beeline.
+Then we have driver -- whose job is to receive hive queries and pass them on to compiler. This compiler
+checks for the symantic analysis.eg the table we are referring to or cols are actually +nt ornot.
+For all of this,  the compilerhas toconnect to metastore.
+This is where all the data regarding tableisstored.
+Then we have Hive Execution engine, which is responsible for execution of query plan created 
+by compiler.
+Hadooop core componens--
+HDFS--where data is stored with the helpof namenode and datanodes.
+Yarn--wich is responsible for allocating resources for hadoop.
+
+So,the working goeslike--
+client->driver->compiler->metasore->compiler->driver->executionengine->HDFS and YARN.
+->hdfs->execution engine->driver->client.
+
+Basic Hive cmds--
+here we will see-connecting to hive,creatin dbs,daatypes,c=reating tables,types of tables,dropping and altering tables.
+
+Connecting to hive--
+open itversity dashboard--click on gateway link to connect to itversity labs--
+-->scroll down open a new terminal window
+$beeline--itis a remotecmdline iinterface for hive.
+Now,connecting to itversity hive server.
+
+connecting to hive server--
+!connect jdbc:hive2://m02.itversity.com:10000/;auth=noSasl
+
+Set Hive warehouse-
+set hive.metastore.warehouse.dir=/user/<ur itversity user name>/warehouse;
+
+beeline> paste !connect cmd.
+give itversityuser name and pwd.
+Now,oncewe are connected tothe server,now setting the warehouse directory.
+which is a base dir fr hive.This is where the table data is going to be stored
+
+Creating db--
+>create db demo_01;
+>use demo_01;
+>create database if not exists demo_01;
+>create database demo_db comment "Database for demo purpose";
+>show databases;
+>show databases like "demo*";
+>describe database demo_01;
+Now tolook inside db,open a new terminal window.for this,click on folder sign-->+-->scroll down-->terminal
+
+now,allof the data in hive is inside HDFS. So,
+$hdfs dfs -ls
+$hdfs dfs -ls /user/<itversity user name>/warehouse
+$hdfs dfs -ls /user/<itversity user name>/warehouse/demo-01.db
+
+Hive datatypes- 2kind of datatypes are-- primitive datatypes which u find inany RDBMS like-
+numeric(int,float,double),datetime(date,timestamp),string(string,char,varchar),miscellaneous(boolean)
+complex dt-array,map,struct.
+array is ordered eq of same type of data. eg score:array(10,13,26,18),indexable-score[0]
+map-collection of key-value pairs.All keys have same datatype.All values hav same datatype. eg name:map('first','Julie','last','Doe')--name['first']
+struct-set of named fields.Each field can be of diff datatypes. eg struct('Julie','Doe',26)
+
+File encoding of data vaues--
+the format in which data is stored in hive is a bit diffr.
+
+create table emp
+{ emp_id int,
+  name map<string,string>,
+  job struct<doj:date,job_id:int,salary:float,manager-id:int,dep_id:int>
+  team array<int>
+}
+comment "Table for employee data"
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+COLLECTIONS TERMINATED BY '$'
+MAP KEYS TERMINATED BY ':'
+STORED AS TEXTFILE;
+
+CREaTINg TABLES IN HIVE--
+>USE DEMO_01;
+>create above table enter
+
+go to anothr terminal--
+
+
+$hdfs dfs -ls /user/<itversity user name>/warehouse/demo-01.db
+we can see emp here
+i.e. dbs and tables are directoris stored in hdfs.
+
+loading data inhive tables--
+uplad employees.zip--using upload button in itversity.
+unzip this file--
+$unzip <path to zipped file> -d <destination path to unzip file>
+eg $unzip /home/itv80149/Hive/Basic_Commands/employees.zip -d /home/itv80149/Hive/Basic_commands/
+
+jut click on the file to see the textfile.
+
+putting this file into hdfs--
+$hdfs dfs -put <path of employee.txt> <path of hdfs eg /user/itv80149/>
+$hdfs dfs -l
+
+nowloading this employee.txt intohive table.
+
+go to hive terminl.
+>load data inpath "<hdfs path where data is located>" into table emp;
+
+$hdfs dfs -ls /user/itv80149/warehouse/demo01.db
+
+here in the o/p we can see directory emp is created 
+
+$hdfs dfs -ls /user/itv80149/warehouse/demo01.db/emp/employees.txt
+
+>describe emp;
+>describe extended emp;
+>describe formatted emp;
+
+Managed vs External tables--
+These are the 2 types of Hive tables.
+
+Hive architecture has 2 parts.1 is Hive core component and another is Hadoop core part.
+which consist of HDFS.
+Hive contains a metastore which contains the metadata about tablesin hive.Any data which is stored in these tables
+is actually stored in Hive warehouse which is a special directory.Whenever a db is created in hive, anew directory is created for 
+that db inside hive warehouse.eg 2 directories for company.db and retailer.db
+Now,when we create a new table in hive, a new directory is created inside the db for these tables.eg emp,dep direc inside company.db and product dir
+inside retailer.db
+ANd any data to be stored inside this table is storedinside this table dir.
+So, for any table in hive where data is stored within the table dir in the warehouse
+and the metadata is stored in the hive metastore is known as managed tables.
+
+ExternalTables--Here we can have data outside warehouse.Like in somerepository which is not in warehouse.
+,on the cloud. This is knwn as external tables.
+
+The diff be themis whenever we drop a managed table it is dropped from warehouse also.
+While in external tables,only the metadata is dropped.The data stays intact where they are located.
+
+D/b themis--
+Managed tables--metadata stored in metastore.Data storedin ive warouse. Dropping table,drops the data and table schema.
+Useful when data is going to be used just in hive.
+
+External tables-- metadata stored in metastore Data stored outside hive warehouse.Dropping table,drops only the table schema.
+Useful when data is going to be used by diff tools like spark or pig or hive.
+
+Crating external table--
+Now we will crerate a direcory ouside of hive wareouse.
+$hdfs dfs -mkdir hive_ext_demo
+$hdfs dfs -ls
+$hdfs dfs -put <path to local file eg /home/itv80149/Hive/basic_Commands/employees.txt> hive_ext_demo
+$hdfs dfs -ls hive_ext_demo
+
+>create external table emp_ext(emp_id int, name map<string, string>, info
+struct<birth_date: date, gender: string>, job struct<hire_date: date,
+dept_no: string, dept_name: string, salary: int>, dept_history
+array<string>)
+comment 'External employees table'
+row format delimited
+fields terminated by ','
+collection items terminated by '$'
+map keys terminated by ':'
+location "/user/itv180149/hive_ext_demo"; 
+
+>describe emp_ext;
+
+>describe formatted emp_txt;
+
+$ hdfs dfs -ls </user/itv80149/warehouse/demo_01.db>
+No directory created for external table data in Hive warehouse -
+○ Only metadata is stored.
+
+Creating tables fromexisting tables--
+>show tables;
+now,creating external table from an existing table in hive,where this
+existing table must be an external table. i.e.wecannot create external  table from managed table.
+
+Create an external table from an existing external table -
+○ This method only copies the schema and not the data.
+○ Use the LOCATION keyword to provide the data location.
+> create external table if not exists emp_ext_2 like emp_ext location
+"/user/itv180149/hive_ext_demo";
+● To check whether the table is external or not -
+> describe formatted emp_ext_2;
+● Create a managed table from an existing managed/external table -
+o Use CTAS (Create Table As Select) command to create a managed table
+from an existing table.
+> create table emp_2 as select * from emp;
+○ The CTAS command cannot be used to create an external table.
+● Check type of table -
+> describe formatted emp_2;
+
+Dropping Tables--
+
+Dropping Tables
+● Drop managed/external table -
+> drop table emp_2;
+> show tables;
+● Check the external table data in the HDFS directory -
+
+$hdfs dfs -ls /user/itv80149/warehouse/demo01.db
+
+dropping external table--
+>drop table emp_ext_2;
+>show tables
+○ hdfs dfs -ls hive_ext_demo
+data is still thee in external location but its metadata is dropped from hive.
+
+● Truncate managed table -
+○ truncate table emp;
+● The table directory isn’t deleted for truncated table -
+○ hdfs dfs -ls /user/itv180149/warehouse/demo_01.db
+hdfs dfs -ls /user/itv180149/warehouse/demo_01.db/emp
+--directory is there but there is no structure.
+
+● Cannot truncate external table -
+○ truncate table emp_ext;
+
+Altering Tables--
+
+Altering Tables
+● Rename a table -
+○ alter table emp_ext rename to emp_external;
+>show tables;
+● To add a new column -
+○ alter table emp_external add columns(company string);
+>describe mp_external;
+● To change the name of a column -
+○ alter table emp_external change company firm string;
+● To drop one or more existing columns from a table -
+○ alter table emp_external replace columns(
+emp_id int,
+name map<string, string>);
+
+Hive Query Language----
+Read recordsin hive becuse wee have diff types of datatypes in hive.
+So how to read them.Then filter and group records.Order by vs Sort by and distribute by clause.
+Because underneath hive ,we ae running map reduce.Another clause is cluster by
+
+Reading records in hive--
+we are going tobe woring with emp table.If dropped or truncated load that again.
+Reading Records in Hive
+● Read complete record -
+○ select * from emp limit 1;
+● Reading map column -
+>select name from emp limit 1;
+○ select name['first_name'] from emp limit 1;
+>select name['first_name'],name['last_name'] from emp limit 1;
+
+○ Reading with an alias
+■ select name['first_name'] Name from emp limit 1;
+
+● Reading struct column -
+○ Reading a specific field within struct -
+■ select job.hire_date from emp limit 1;
+■ Using the dot operator we can read fields of a struct column.
+○ Reading multiple fields from struct column -
+■ select job.hire_date, job.dept_name from emp limit 1;
+● Reading array column -
+>select dept_history fromemp limit 10;
+○ Reading a specific value from array -
+■ select dept_history[0], dept_history[1] from emp limit 10;
+● Hive can optimize the query execution with simple jobs that can be performed on
+a single machine. When this happens, Hive actually runs the job in Hadoop’s local
+mode.
+● Following runs a mapreduce job -
+○ select count(*) from emp;
+
+
+Filtering Data in Hive
+● Finding the employee ids of all the employees whose first_name is ‘Georgie’ -
+○ select emp_id from emp where name['first_name']='Georgi';
+● Finding the employee ids of all the employees whose first_name is ‘Georgie’ and
+last_name is ‘Facello’ -
+○ select emp_id from emp where name['first_name']='Georgi' and
+name['last_name']='Facello';
+● Counting the number of employees in the Marketing department -
+○ select count(*) from emp where job.dept_name='Marketing';
+● Counting the number of employees in the Marketing and Finance departments -
+○ select count(*) from emp where job.dept_name in ('Marketing', 'Finance');
+● Counting the number of employees whose birth year comes after 1960 -
+○ select count(*) from emp where year(info.birth_date)>1960;
+● Count the number of employees who first worked in department d002 and later
+switched to department d003 -
+○ select count(*) from emp where dept_history[0]="d002" and
+dept_history[1]="d003";
+
+
+
+Grouping Data in Hive
+● Find the average salary of employees per department name -
+○ select job.dept_name, avg(job.salary) sal_avg from emp group by
+job.dept_name;
+● Find the average salary of employees per department name and per gender -
+○ select job.dept_name, info.gender, avg(job.salary) sal_avg from emp
+group by job.dept_name, info.gender;
+● Only display that group whose average salary is greater than 70,000
+○ select job.dept_name, info.gender, avg(job.salary) sal_avg from emp
+group by job.dept_name, info.gender having sal_avg > 70000;
+● Now order this output by the average group salary -
+○ select job.dept_name, info.gender, avg(job.salary) sal_avg from emp
+group by job.dept_name, info.gender having avg(job.salary) > 70000
+order by sal_avg;
+
+Ordering records in Hive---
+
+
+Sort by clause-- data is mapped to a reducer based on hash func
+
+ORDER BY vs SORT BY
+● Let's take a small sample of first 50 employees from the table -
+○ create table emp_50 as select * from emp limit 50;
+● Order records in ascending order of their salary using ORDER BY clause-
+○ select info.gender, job.salary from emp_50 order by job.salary;
+● Use the SORT BY clause to write the above query -
+○ select info.gender, job.salary from emp_50 sort by salary;
+● Increase the number of reducers. We can increase the number of reducers with
+the following command -
+○ set mapreduce.job.reduces;
+○ Set to two reducers -
+■ set mapreduce.job.reduces=2;
+● Run the ORDER BY command -
+○ select info.gender, job.salary from emp_50 order by job.salary;
+○ The output is in order over here.
+○ Notice that ORDER BY is using only 1 of the 2 reducers here.
+● Run the SORT BY command -
+○ select info.gender, job.salary from emp_50 sort by salary;
+○ Notice that the output is not in order. This is because the records here
+were distributed to two reducers. And both the reducers ordered the
+records locally.
+○ Notice SORT BY is using both the reducers here.
+ 
+Distributing Data in HIve----
+
+DISTRIBUTE BY with SORT BY
+● Check the number of reducers in use -
+○ set mapreduce.job.reduces;
+● Sort data using SORT BY clause -
+○ select info.gender, job.salary from emp_50 sort by salary;
+○ The output isn’t ordered.
+● Using DISTRIBUTE BY to ensure the records with same key go to the same
+reducer -
+○ select info.gender, job.salary from emp_50 t1 distribute by gender sort by
+salary;
+○ Now the output is in order. This is because all the records were distributed
+by the gender. So, all the records having gender as male, went to the same
+reducers. And only then the records were sorted based on their salary.
+● But one thing to keep in mind is that, even DISTRIBUTE BY and SORT BY together
+may not guarantee global ordering. As you can see, even though the same gender
+records are together because of the equal distribution, the global ordering is not
+there.
+
+Built-in Functions in Hive
+● The size() function can be used to find the number of elements in a map or array -
+○ select size(name) from emp limit 1;
+○ select size(dept_history) from emp limit 10;
+● If you want to find out the keys in a map collection, then use the map_keys()
+function -
+○ select map_keys(name) from emp limit 1;
+● If you want to view the values from a map, then use the map_values() function -
+○ select map_values(name) from emp limit 1;
+● If you want to find out whether an element is present in an array collection or not
+-
+○ select dept_history, array_contains(dept_history, "d005") from emp limit
+10;
+● Then we have the regular string function. For example we want to concatenate
+the first name and last name of employee -
+○ select concat(name['first_name'], ' ', name['last_name']) from emp limit 5;
+● For example, we want to extract first 3 character starting from 0th index from an employee’s name -
+○ select substr(name['first_name'], 0,3) Code from emp limit 10;
+● Then we also have the conditional statement in Hive. For ex we want to print the
+salutation for each employee based on their gender -
+○ select name,
+case
+when info.gender='M' then 'Mr.'
+when info.gender='F' then 'Ms.'
+end Salutation
+from emp limit 10;
+● A complete list of functions can be found here -
+https://cwiki.apache.org/confluence/display/Hive/LanguageManual+UDF
+
+Joins in hive---
+
+
+Introducing the Dataset
+The dataset is from a hypothetical coding platform. Users come and submit their
+solutions to existing problems on the platform and improve their programming skills.
+The datasets has three tables - Users, Problems, Submissions
+Unzip tables :-
+● Unzip dataset in Itversity -
+$ unzip Hive/Joins_in_Hive/Coding_platform.zip -d Hive/Joins_in_Hive
+>et hive.metastore.warehouse.dir=/user/itv80149/warehouse
+>create database coding_plt_db;
+>use coding_plt_db;
+ 
+Submission table :-
+● Create submission table -
+> create table submissions(user_id string, problem_id string,
+attempts_range int)
+row format delimited
+fields terminated by ','
+TBLPROPERTIES ("serialization.null.format"="");
+
+TBLPROPERTIES ("serialization.null.format"="")--means equateempty string to anull value.
+
+
+● Put file to HDFS -
+$ hdfs dfs -put
+/home/itv180149/Hive/Joins_in_Hive/Coding_platform/submissions.txt
+/user/itv180149
+● Load data into Hive table -
+> load data inpath "/user/itv180149/submissions.txt" into table
+submissions;
+Users table :-
+● Creating users table -
+> create table users(user_id string, country string, rating int)
+row format delimited
+fields terminated by ','
+TBLPROPERTIES ("serialization.null.format"="");
+● Put file to HDFS -
+○ hdfs dfs -put
+/home/itv180149/Hive/Joins_in_Hive/Coding_platform/users.txt
+/user/itv180149
+● Load data into Hive table -
+○ load data inpath "/user/itv180149/users.txt" into table users;
+Problems table :-
+● Creating problems table -
+○ create table problems(problem_id string, level_type string, points int,
+tags array<string>)
+row format delimited
+fields terminated by ','
+collection items terminated by '$'
+TBLPROPERTIES ("serialization.null.format"="");
+● Put file to HDFS -
+○ hdfs dfs -put
+/home/itv180149/Hive/Joins_in_Hive/Coding_platform/problems.txt
+/user/itv180149
+● Load data into Hive table -
+○ load data inpath "/user/itv180149/problems.txt" into table problems;
+
+>show tables;
+>select * from users limit 1;
+>select * from problems limit 1;
+>select * from submissions limit  1;
+Inner Join
+● Run command -
+○ set hive.auto.convert.join=false;
+● Find the count of those users for every country who have successfully submitted
+a solution.
+○ We need to join users and submissions tables.
+■ select country, count(distinct users.user_id) Count from users
+inner join submissions on users.user_id=submissions.user_id
+group by country order by Count;
+○ Notice that here we have 3 jobs - join, group by, order by
+● Find a count of submissions for every problem level type. For this we will need to
+join problems and submissions tables -
+○ select level_type, count(distinct problems.problem_id) Count from
+problems inner join submissions on
+problems.problem_id=submissions.problem_id group by level_type order
+by Count desc;
+● Exercise - Find the average number of problems solved per user from each
+country.
+
+Outer Join
+● Run command -
+○ set hive.auto.convert.join=false;
+● Find the count of those users for every country who have successfully submitted
+a solution.
+○ Those users who have successfully submitted a solution -
+■ select country, count(distinct users.user_id) Count from users
+inner join submissions on users.user_id=submissions.user_id
+group by country order by Count;
+○ A left join would return all users, who have and haven’t submitted a
+solution -
+■ select country, count(distinct users.user_id) Count from users left
+join submissions on users.user_id=submissions.user_id group by
+country order by Count;
+○ To only find users who haven’t submitted a solution, we filter the data -
+■ select country, count(distinct users.user_id) Count from users left
+join submissions on users.user_id=submissions.user_id where
+problem_id is null group by country order by Count;
+● Full outer join in Hive -
+○ select * from users full outer join submissions on
+users.user_id=submissions.user_id;
+● Exercise - Find the count of those problems that were not solved by any user.
+
+Map-SideJoin--
+
+Map-Side Join
+● So far we have been querying the tables with the join operator.
+○ set hive.auto.convert.join=false;
+○ select * from users inner join submissions on users.user_id =
+submissions.user_id limit 10;
+● We can actually view how this query was implemented using the EXPLAIN
+keyword -
+○ explain select * from users inner join submissions on users.user_id =
+submissions.user_id;
+● Notice that first we are scanning the users table which has a size of about 80 KB
+Then the submissions table is scanned which has a size of about 3 MB. And then
+the reduce operation is performed where the join operation is implemented.
+● Now, Hive actually provides an optimized way of joining two tables, and that is
+called Map-side join or Map join. In map join, actually the smaller of the two
+tables is cached in memory. The larger table is streamed through the mappers
+and then the join is performed. This is much more efficient than streaming
+through both the tables in the mapper.
+● So first we need to allow Hive to auto-convert any join to map join using the
+following command -
+○ set hive.auto.convert.join=true;
+● Now lets see how the previous join was implemented-
+○ explain select * from users inner join submissions on users.user_id =
+submissions.user_id;
+○ Now as you can see, both the tables were scanned by the mappers, but
+then the map join is implemented once the larger table of the two, that is
+the submissions table is scanned.
+
+Partitioning---
+Since hive works with huge amount of data,it also has optimizaion tecniques.
+Like partitioning which results in better qurying performance.
+
+Whenever we crete a table in hive,a dir is created in inside hive metastore dir
+for that partiular table.The data is stored inside this dir and if u want to
+query any record,hive scans all the records in the data.
+
+In partitioning,complete data is not stored like that only but in partitions doneon somecol.For
+eg. for patient table,partition is done on gynaecologist,pediartrics,ent,etc.
+A new subdirctory is created for each of these cols and records are saved accr.
+
+
+Introducing the Dataset
+● Unzip dataset in Itversity -
+○ unzip Hive/Partitions/Hospital_Data.zip -d Hive/Partitions
+● Create hospital table -
+> create table hospital( Hospital_Code int, Hospital_Type_Code char(1),
+City_Code_Hospital int, Hospital_Region_Code char(1), Address string
+row format delimited fields terminated by '$';
+● Put file to HDFS -
+○ hdfs dfs -put
+/home/itv180149/Hive/Partitions/Hospital_Data/hospital.txt
+/user/itv180149
+● Load data into Hive table -
+○ load data inpath "/user/itv180149/hospital.txt" into table hospital;   
+
+
+Creating Partitioned Table
+● Create the cases table with multiple partitions. We partition by the department,
+and then by the severity_of_illness -
+○ create table cases_part(Case_Id int,
+Hospital_Code int,
+Patient_Id int,
+Ward_Type char(1),
+Ward_Facility_Code char(1),
+Bed_Grade int,
+Type_of_Admission string,
+Visitors_with_Patient int,
+Age_Group string,
+Admission_Deposit float,
+Stay string )
+partitioned by ( Department string, Severity_of_Illness string )
+row format delimited
+fields terminated by '$'
+TBLPROPERTIES ("serialization.null.format"="");
+● Put file to HDFS -
+○ hdfs dfs -put /home/itv180149/Hive/Partitions/Hospital_Data/case.txt
+/user/itv180149
+● Check directory -
+○ hdfs dfs -ls /user/itv180149
+● Load data into Hive table -
+○ load data inpath "/user/itv180149/case.txt" into table cases_part;
+● Check directory in HDFS -
+○ hdfs dfs -ls /user/itv180149/warehouse/hospital_db.db/cases_part
+● Notice the new subdirectories that are created. These subdirectories are based
+on the values in the department column on which we partitioned the table. And
+each subdirectory contains data specific to that particular department. Compare
+this to the directories we saw earlier in the module on non-partitioned tables. We
+can actually look inside one of these subdirectories -
+○ hdfs dfs -ls
+/user/itv180149/warehouse/hospital_db.db/cases_part/department=ane
+sthesia
+● Inside each sub-directory, we have the data partitioned by the second column on
+which we partitioned by data, which is the severity_of_illness
+○ hdfs dfs -ls
+/user/itv180149/warehouse/hospital_db.db/cases_part/department=ane
+sthesia/severity_of_illness=Extreme
+● Inside this we have the actual data. So this data was first partitioned by the
+department and then by the severity of illness.
+● We can check the description and it will show that the table is partitioned on the
+columns-
+○ describe cases_part;
+● And we can even check each partition value by typing in the following command -
+○ show partitions cases_part;
+
+
+
+Querying Partitioned Table
+● Now, when we query the partition table based on the partition values, then only
+the records in that particular partition are scanned.
+○ For example, if we query the table and count the records where the
+department is “radiotherapy” -
+■ select count(*) from cases_part where department='radiotherapy';
+○ In this case, only the records from the radiotherapy directory were
+scanned.
+● Since we have another partition within this directory, we can include that in the
+WHERE clause as well to further reduce the number of records to be scanned.
+○ select count(*) from cases_part where department='radiotherapy' and
+severity_of_illness='Extreme';
+● To prevent from accidentally running a query that scans all the records in the
+entire table without mentioning the partitions, we can run Hive in “strict” mode -
+○ set hive.mapred.mode=strict;
+○ This will now throw an error -
+■ select count(*) from cases_part;
+○ Hive’s strict mode prevents querying on partitioned tables without using a
+WHERE clause that filters on the partitions. The above query will run fine
+with WHERE clause -
+■ select count(*) from cases_part where department='radiotherapy';
+○ We can turn off the strict mode as follows-
+■ set hive.mapred.mode=nonstrict;
+● Create a non-partitioned managed table with the same cases data and see the
+difference in the querying.
+○ create table cases_non_part(Case_Id int, Hospital_Code int, Patient_Id
+int, Ward_Type char(1), Ward_Facility_Code char(1), Bed_Grade int,
+Type_of_Admission string, Visitors_with_Patient int, Age_Group string,
+Admission_Deposit float, Stay string, Department string,
+Severity_of_Illness string )
+row format delimited
+fields terminated by '$'
+TBLPROPERTIES ("serialization.null.format"="");
+● Let’s put the data in HDFS -
+○ hdfs dfs -put /home/itv180149/Hive/Partitions/Hospital_Data/case.txt
+/user/itv180149
+● Let’s load data into this non-partitioned Hive table -
+○ load data inpath "/user/itv180149/case.txt" into table cases_non_part;
+● Count the number of records that belong to the ‘radiotherapy’ or ‘anesthesia’
+departments in the non-partitioned and the partitioned tables -
+○ Running the query on the non-partitioned table -
+■ select count(*) from cases_non_part where department in
+('radiotherapy', 'anesthesia');
+○ Running the query on the partitioned table -
+■ select count(*) from cases_part where department in
+('radiotherapy', 'anesthesia');
+
+Types of Partitioningin HIve-- dynamic and static partitioning--
+taking patient table as eg.We have partitions for gynaecology,pediatircs,ent.
+When we reated partitions , hive automatically created the partitons into sub-directories.
+and loaded the partitioned data into subdirectories for us.
+This id dynamicpartitioning where subdirectories for the partitions are automatically created by hive.
+
+Static partitioning--lets say we are again partitioning data on the basis of the department table.
+But thiswe have tomanually create each partition and insert data into it.
+
+D/b dynamic and stsaic--
+dynmic--automatically created by hive,data is loaded by hive and preferred when no.of partitions is large.
+static -partions created manually and data created manually.Preferred when large files are to be loaded.
+Load time forstatic partitioing is faster than dynamic.
+Now,lets say we want to partitionon a col, and that colis absent from the actual data file,then we use static partitioning.
+
+
+Static Partitioning in Hive
+● Create static partitioned table for the cases table -
+○ create table cases_part_static(Case_Id int, Hospital_Code int, Patient_Id
+int, Ward_Type char(1), Ward_Facility_Code char(1), Bed_Grade int,
+Type_of_Admission string, Visitors_with_Patient int, Age_Group string,
+Admission_Deposit float, Stay string )
+partitioned by ( Department string, Severity_of_Illness string )
+row format delimited
+fields terminated by '$'
+TBLPROPERTIES ("serialization.null.format"="");
+● To load data into a Statically partitioned Hive table, we need to manually insert
+the data. Also, we will need a non-partitioned table originally from where we can
+insert data into the statically partitioned table.
+● Manually insert data from this non-partitioned table into the partitioned table, one
+partition at a time.
+○ insert into cases_part_static partition (department='anesthesia',
+severity_of_illness='Extreme') select Case_Id, Hospital_Code, Patient_Id,
+Ward_Type, Ward_Facility_Code, Bed_Grade, Type_of_Admission,
+Visitors_with_Patient, Age_Group, Admission_Deposit, Stay from
+cases_non_part where department='anesthesia' and
+severity_of_illness='Extreme';
+● Notice the insert time over here is much less than in dynamic partitioning.
+
+$hdfs dfs -ls warehouse/partition_db.db/cases_part_static
+
+$hdfs dfs -ls warehouse/partition_db.db/cases_part_static/department-anesthesia
+
+$hdfs dfs -ls warehouse/partition_db.db/cases_part_static/department-anesthesia/severity_of_illness=Extreme/000000_0
+
+U can create more static partitions and check in the hdfs directory.
+
+
+Dynamic Partition Properties
+● If you are using dynamic partitioning, then you have to set the following settings -
+○ You have to turn on dynamic partitioning -
+■ set hive.exec.dynamic.partition;
+○ This needs to be set to true for dynamic partitioning. By default this is true
+in Hive’s latest versions.
+■ set hive.exec.dynamic.partition=true;
+● Hive runs dynamic partitioning in a strict mode where we have to create at least
+one static partition, like we did in the previous video, before we can implement
+dynamic partitioning on the table. To set that mode, we have the following
+command -
+○ set hive.exec.dynamic.partition.mode;
+● Another property is that, we can set the number of maximum partitions that Hive
+can create dynamically. By default that number is 1000
+○ set hive.exec.max.dynamic.partitions;
+○ But we can always change this number. However, since we are dealing
+with Hadoop, which generally deals with very large files, it is not
+recommended to create a very large number of partitions.
+
+
+Altering Partitioned Table
+>show partitions cases_part;
+● Add a new partition to a table -
+○ alter table cases_part
+add partition (department='pediatrics', severity_of_illness='Minor')
+location
+'/user/itv180149/warehouse/partition_db.db/cases_part/department=pe
+diatrics/severity_of_illness=Minor/';
+
+These partitions can be in diff locations.
+
+● Show partitions -
+○ show partitions cases_part;
+● Check warehouse directory -
+○ hdfs dfs -ls warehouse/partition_db.db/cases_part
+● Add multiple partitions to the table -
+○ alter table cases_part add if not exists
+partition (department='pediatrics', severity_of_illness='Moderate')
+location
+'/user/itv180149/warehouse/partition_db.db/cases_part/department=pe
+diatrics/severity_of_illness=Moderate/'
+partition (department='pediatrics', severity_of_illness='Extreme') location
+'/user/itv180149/warehouse/partition_db.db/cases_part/department=pe
+diatrics/severity_of_illness=Extreme/';
+● Show partitions -
+○ show partitions cases_part;
+● Check warehouse directory -
+○ hdfs dfs -ls
+warehouse/hospital_db.db/cases_part/department=pediatrics
+● Rename an existing partition -
+○ alter table cases_part
+partition(department='pediatrics', severity_of_illness='Moderate')
+rename to partition(department='Pediatrics',
+severity_of_illness='Moderate');
+● Show partitions -
+○ show partitions cases_part;
+● Check warehouse directory -
+○ hdfs dfs -ls warehouse/hospital_db.db/cases_part
+○ hdfs dfs -ls
+warehouse/hospital_db.db/cases_part/department=pediatrics
+○ hdfs dfs -ls
+warehouse/hospital_db.db/cases_part/department=Pediatrics
+● Drop an existing partition -
+○ alter table cases_part drop if exists partition (department='pediatrics',
+severity_of_illness='Minor');
+● Show partitions -
+○ show partitions cases_part;
+● Check warehouse directory -
+○ hdfs dfs -ls
+warehouse/hospital_db.db/cases_part/department=pediatrics
+
+Bucketing in hive---
+when we partition a table in hive, the partitioned data is stored in a seperate 
+subdirectory within the same table directory.
+Namenode in hadoop keeps the dir tree of allthe filesin hdfs.So it knows wherre the 
+data of each partition was stored across the hadoop cluster.
+Now if the col  that u  want to partition on has a large no. of distinct values,
+then a very largeno. ofpartitions willbe created for a table for each of the distinct
+value.For eg,if u partition a data on emp_id,how large partitions we will have.
+And this will cause  a maintenance problem  with the name node,making it extremely 
+difficult forit to maintain hdfs namespace and its associated metadata.
+So instead of recording data about distinct values within each partition, we can instead create
+multiple files within a single partition, this will drastically reduce the no. of directories that namenode
+has to  handle.This is called bucketing in hive.
+
+Buscketing storeds data into diff segmented files or buckets with or without partition.
+It is beneficial for largeno.of distinct values on a col.
+Records with the same value are stored inthe same bucket.
+
+Hive uses hash_function inthe backend and applies iton bucketing_col
+hash_function(bucketing_column)
+then it takes the modlus of the result with n.of buckets  
+hash_function(bucketing_column) mod number_of_buckets
+
+buckets are the no.of segmented fileson which we want to divide the data.
+hash_func is appliedon each of the col row.
+
+Bucketing in Hive
+
+Bucketing Table---
+so we will create a new table. We will partition it and we will bucket it as well.
+
+● Create bucketed table -
+○ create table cases_bucket(Case_Id int, Hospital_Code int, Patient_Id int,
+Ward_Type char(1), Ward_Facility_Code char(1), Bed_Grade int,
+Type_of_Admission string, Visitors_with_Patient int, Age_Group string,
+Admission_Deposit float, Stay string )
+partitioned by ( Department string, Severity_of_Illness string )
+clustered by (patient_id) into 10 buckets
+row format delimited
+fields terminated by '$'
+TBLPROPERTIES ("serialization.null.format"="");
+
+#---- hdfs block size is by default 128MB.SO,u can divide file size by block size.
+# but when u r doing this,keep in mind the skewness of data since alot of data 
+# might go in 1 bucket.
+# Also since we have created 10 buckets, hive has used 10 reducers to complete this job.
+ 
+○ We are creating 10 buckets based on the patient_id within each partition.
+● Put file to HDFS -
+○ hdfs dfs -put /home/itv180149/Hive/Partitions/Hospital_Data/case.txt
+/user/itv180149
+● Load data into Hive table -
+○ load data inpath "/user/itv180149/case.txt" into table cases_bucket;
+○ Notice that since we are bucketing the data into 10 buckets, Hive is using
+10 reducers to accomplish this job.
+● Let’s check the table description -
+○ describe formatted cases_bucket;
+○ Notice the partitions and buckets here.
+● We have 10 buckets or files within each partition -
+○ hdfs dfs -ls
+/user/itv180149/warehouse/patient_db.db/cases_bucket/department=an
+esthesia/severity_of_illness=Extreme
+● So if we run queries on the partitioned and bucketed columns, then those
+queries will run much faster.
+○ Check the records where the patient id is 306180 and department is
+gynecology and severity of illness is Minor -
+■ select hospital_code, department, severity_of_illness from
+cases_bucket where patient_id=306180 and
+department='gynecology' and severity_of_illness='Minor';
+
+
+file formats in hive---
+We will be discussing diff file formats in hive and their advs.
+Reading orcdata file.SerDes and implementing Custom SerDes.
+
+So far we have stored data in hivetables in smple text format.
+Such  a format is very useful for viewing or editing the files manually.
+But since we are dealing with large sets of data in hive,this probably is not
+the most efficient formatto store the data.Because we wan better disk utilization
+and better i/p o/p  performace.So  hive supports various file formats like orc,SequenceFile,Parquet,etc
+Themost poweerful one is ORC--It is optimized row columnar,stores data in binary format in binary compressed 
+columnar format which makes it suitable for queryng onthe cols rather than on the rows.
+
+ORC file format-- contains groupsof row data whih are called stripes. By default they are of 250MB each
+but u can change that as per ur requirement.Each stripe has an index data,row data and a stripe footer.
+index data contains min and max values for each colas well as the offset for the row data.
+So it knows where the row data is located within each col.So with the help of this, we can skip 
+entire stripe if the data is not +nt there.
+Then, ther is row data which actually contains the data contained within the rows and that are part of stripe.
+Both row and index data are storedin columna format so it enables efficient querying.
+Stripe footer contains the metadata about the stripe.
+
+Parquet file foramt--columnar storage,compressed format and is like orc only.
+
+Sequence File Format--data is stored in the format of binary key-value pairs.
+Compressed format.Row level storage.Here the entire data for a row are stored together.
+Soit is more suitable for row level querying.
+
+ORC File format--
+
+ORC File Format
+● Create table that stored data in ORC format -
+○ create table cases_orc(Case_Id int, Hospital_Code int, Patient_Id int,
+Ward_Type char(1), Ward_Facility_Code char(1), Bed_Grade int,
+Type_of_Admission string, Visitors_with_Patient int, Age_Group string,
+Admission_Deposit float, Stay string, Department string,
+Severity_of_Illness string)
+row format delimited
+fields terminated by '$'
+stored as orc;
+● Put file to HDFS -
+○ hdfs dfs -put /home/itv180149/Hive/Partitions/Hospital_Data/case.txt
+/user/itv180149
+● Load data into Hive table -
+○ load data inpath "/user/itv180149/case.txt" into table cases_orc;
+○ We get an error because the data isn’t in the format we are looking for. To
+successfully load this, we need to create a temporary table first and then
+insert the data from over there.
+● Create temporary table -
+○ create table cases_text(Case_Id int, Hospital_Code int, Patient_Id int,
+Ward_Type char(1), Ward_Facility_Code char(1), Bed_Grade int,
+Type_of_Admission string, Visitors_with_Patient int, Age_Group string,
+Admission_Deposit float, Stay string, Department string,
+Severity_of_Illness string )
+row format delimited
+fields terminated by '$'
+TBLPROPERTIES ("serialization.null.format"="");
+● Load data into Hive table -
+○ load data inpath "/user/itv180149/case.txt" into table cases_text;
+● Now let’s drop the earlier ORC table -
+○ drop table cases_orc;
+● Create ORC table with data from temporary table -
+○ create table cases_orc stored as orc as select * from cases_text;
+● Describe table -
+○ describe formatted cases_orc;
+○ We have an ORC file format over here. 
+
+What areSerDes--Now,we can store the data in hive in diff file formats.
+BUt how to read the row format from that particular data?--i.e. how hive knows 
+fields and rows are seperated.
+
+CREATE TABLE EMP
+COMMENT ‘Table for employees data’
+ROW FORMAT DELIMITED----------------------------with the help of row format delimited it can.BUt this is for text file
+FIELDS TERMINATED BY ‘,’
+
+
+What if we are working with csv or tsv file. This is where serializer - deserializer comes.
+It is simply used for i/o purpose in hive.It simply reads row data in file and convert to objects understood by hive.
+And there are diff serdes for diff file formats.
+
+1st talk about deserializer--1st hive i/p format read the data from hdfs in whichever format the datais stored in.
+i.e. text,orc , parquet etc.
+Then this data is read by deserializer which identifies hows the rows are sepperated and this then converted into an obj
+which is understood by hive.
+
+Now, lets say we want to do some write operationon data.This is done by serializer.
+
+The hive obj performs the write op on the data deserialized by the deserializer.
+Once that is done, the serializer then converts the hive obj into the file format in which the data is stored.
+This is then converted by the hiveobject into the appropriate file format to store on hdfs.
+
+
+CSV SerDe--
+Reading hospital.csv first
+
+● Let’s try and read a simple CSV file - -
+○ create table hospital_csv( Hospital_Code int, Hospital_Type_Code
+char(1), City_Code_Hospital int, Hospital_Region_Code char(1), Address
+string)
+row format delimited
+fields terminated by ','
+stored as textfile;
+● Put file to HDFS -
+○ hdfs dfs -put /home/itv180149/Hive/File_Formats/hospital.csv
+/user/itv180149
+● Let’s try and read the data -
+○ load data inpath "/user/itv180149/hospital.csv" into table hospital_csv;
+>select * from hospital_csv limit 1;
+○ The data isn’t read perfectly.
+○ Notice how the state after the comma in the address field is not read by
+Hive because we provided the comma separator. Use a CSV serde in Hive.
+● Using the CSV serde that comes packaged in Hive -
+○ create table hospital_csv( Hospital_Code int, Hospital_Type_Code
+char(1), City_Code_Hospital int, Hospital_Region_Code char(1), Address
+string)
+row format serde 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+stored as textfile;
+● Put file to HDFS -
+○ hdfs dfs -put /home/itv180149/Hive/File_Formats/hospital.csv
+/user/itv180149
+● Load the data -
+○ load data inpath "/user/itv180149/hospital.csv" into table hospital_csv;
+● Let’s try and read the data -
+○ select * from hospital_csv limit 2;
+● Check the table description -
+○ describe formatted hospital_csv;
+● Documentation link -
+○ https://cwiki.apache.org/confluence/display/hive/csv+serde
+     
+
+Customising SerDes--
+How to write a tsv file because hive doesnot provide a serdes for tsv.We can read a tsv file using csv serde only but with some customizations.
+
+Customizing SerDes
+● To read TSV data, we can make some changes to the CSV serde and use that
+serde.
+● So, we have the with serdeproperties option that allows us to define properties
+which will be passed to the SerDe.
+● Using that we can say that instead of using comma as a separator, we want to
+use the tab as a separator. And rest of the properties remain same -
+○ create table hospital_tsv( Hospital_Code int, Hospital_Type_Code char(1),
+City_Code_Hospital int, Hospital_Region_Code char(1), Address string)
+row format serde 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+WITH SERDEPROPERTIES ( "separatorChar" = '\t', "quoteChar" = '"',
+"escapeChar" = '\\')
+stored as textfile;
+● Put file to HDFS -
+○ hdfs dfs -put /home/itv180149/Hive/File_Formats/hospital.tsv
+/user/itv180149
+● Load data into Hive table -
+○ load data inpath "/user/itv180149/hospital.tsv" into table hospital_tsv;
+● Read the data -
+○ select * from hospital_tsv limit 2;
+
+
+View in hive--
+To access limited set of table then we can create views. It is not stored by hive, instead its query is stored by hive.
+
+Why to use a view-- reduce complexity of code .It is useful when the query contains multiple joins or subquery.and restrict data from a table. 
+
+Creating view--
+
+Creating View
+● Use employees data from before -
+○ use demo_01;
+● Check employees data -
+○ select * from emp limit 1;
+● Create a view with only emp id and job details. -
+○ create view job_view as select emp_id, job from emp;
+● Can also create view with limited values from complex data types.
+○ Creating a view with emp id and hire date and department id -
+○ create view job_view_2 as select emp_id, job.hire_date, job.dept_no from
+emp;
+● Query views the same way we do normal tables in Hive -
+○ select * from job_view_2 where year(hire_date)>=2000;
+● Check the view description -
+○ describe formatted job_view_2;
+○ Notice here that this is a VIRTUAL VIEW
+○ Notice the View information at the bottom telling us about its create
+statement and its base table.
+● Useful use case of view is to simplify the use of complex queries.
+○ For example we want to find all employees who have salary more than the
+average salary of all the employees. This query would require a subquery -
+○ set hive.auto.convert.join=false;
+○ select * from emp where job.salary > (select avg(job.salary) from emp);
+● Can simplify this query by first creating a view for the subquery. That will; make it
+easier to define any further queries on it-
+○ create view avg_sal_view as select * from emp where job.salary > (select
+avg(job.salary) from emp);
+○ Now we can easily run queries on it.
+○ Count the total such employees -
+■ select count(*) from avg_sal_view;
+○ Count total such employees from Marketing department -
+■ select count(*) from avg_sal_view where
+job.dept_name='Marketing';
+
+
+Altering View
+● Rename a view -
+○ alter view avg_sal_view rename to avg_sal;
+● Drop view -
+○ drop view avg_sal;
+
+https://courses.analyticsvidhya.com/certificates/oed0ssrbwz
